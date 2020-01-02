@@ -1,16 +1,34 @@
-name: Deploy to ut1
+name: Build and deploy to staging ut1 when pull request is created
 
 on:
-  repository_dispatch:
-    types: [deploy-ut1]
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  deploy-ut1:
-    name: Deploy to ut1 environment
+  build-and-deploy:
+    name: Build and deploy to ut1 environment
+
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
+
+      # Setup gcloud CLI
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '270.0.0'
+          service_account_email: ${{ secrets.GCP_SA_FDK_JENKINS_GCR_EMAIL }}
+          service_account_key: ${{ secrets.GCP_SA_FDK_JENKINS_GCR }}
+
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - run: gcloud auth configure-docker
+
+      - name: Build Docker image with GitHub commit sha tag
+        run: docker build -t eu.gcr.io/fdk-infra/fdk-nginx-altinn-proxy-mock:$GITHUB_SHA -t eu.gcr.io/fdk-infra/fdk-nginx-altinn-proxy-mock:staging_latest .
+
+      - name: Publish docker image to Google Cloud
+        run: docker -- push eu.gcr.io/fdk-infra/fdk-nginx-altinn-proxy-mock
 
       - name: Apply Helm template
         uses: stefanprodan/kube-tools@v1
