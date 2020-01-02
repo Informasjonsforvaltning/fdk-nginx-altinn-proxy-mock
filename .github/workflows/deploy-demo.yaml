@@ -1,16 +1,33 @@
-name: Deploy to demo
+name: Build, test and deploy to demo on merge to master branch
 
 on:
-  repository_dispatch:
-    types: [deploy-demo]
+  push:
+    branches:
+      - master
 
 jobs:
-  deploy-demo:
-    name: Deploy latest production image to demo environment
+  build-test-and-deploy-demo:
+    name: Build, test, publish and deploy to demo environment
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
+
+      # Setup gcloud CLI
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '270.0.0'
+          service_account_email: ${{ secrets.GCP_SA_FDK_JENKINS_GCR_EMAIL }}
+          service_account_key: ${{ secrets.GCP_SA_FDK_JENKINS_GCR }}
+
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - run: gcloud auth configure-docker
+
+      - name: Build Docker image
+        run: docker build -t eu.gcr.io/fdk-infra/fdk-nginx-altinn-proxy-mock:latest .
+
+      - name: Publish docker image to Google Cloud
+        run: docker -- push eu.gcr.io/fdk-infra/fdk-nginx-altinn-proxy-mock:latest
 
       - name: Apply Helm template
         uses: stefanprodan/kube-tools@v1
@@ -24,6 +41,7 @@ jobs:
             cat ./kubectlapply.yaml
             chmod o+w ./kubectlapply.yaml
             cat kubectlapply.yaml
+
       - name: Get kubeconfig file from GKE
         uses: machine-learning-apps/gke-kubeconfig@master
         with:
@@ -31,6 +49,7 @@ jobs:
           project_id: fdk-dev
           location_zone: europe-north1-a
           cluster_name: fdk-dev
+
       - name: Deploy to demo
         uses: docker://bitnami/kubectl:latest
         env:
