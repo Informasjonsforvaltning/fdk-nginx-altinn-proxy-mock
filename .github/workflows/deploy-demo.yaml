@@ -38,7 +38,6 @@ jobs:
             helm repo add fdk https://informasjonsforvaltning.github.io/helm-chart/
             helm fetch --untar --untardir ./helm fdk/fdk-nginx-altinn-proxy-mock
             helm template --set DOCKER_IMAGE_NAME="eu.gcr.io/fdk-infra/fdk-nginx-altinn-proxy-mock:$GITHUB_SHA" -f ./helm/fdk-nginx-altinn-proxy-mock/values/demo.yaml ./helm/fdk-nginx-altinn-proxy-mock/ > ./kubectlapply.yaml
-            cat ./kubectlapply.yaml
             chmod o+w ./kubectlapply.yaml
             cat kubectlapply.yaml
 
@@ -56,3 +55,10 @@ jobs:
           KUBECONFIG: '/github/workspace/.kube/config'
         with:
           args: "apply -f ./kubectlapply.yaml --force"
+
+      - name: Notify slack of deploy
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        uses: pullreminders/slack-action@master
+        with:
+          args: '{\"channel\":\"C7NTH118T\",\"text\":\"Application: fdk-nginx-altinn-proxy-mock deployed to demo\"}'
