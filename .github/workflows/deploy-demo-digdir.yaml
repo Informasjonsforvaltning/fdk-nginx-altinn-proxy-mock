@@ -37,7 +37,7 @@ jobs:
             helm init --client-only
             helm repo add fdk https://informasjonsforvaltning.github.io/helm-chart/
             helm fetch --untar --untardir ./helm fdk/fdk-nginx-altinn-proxy-mock
-            helm template --set DOCKER_IMAGE_NAME="eu.gcr.io/fdk-infra/fdk-nginx-altinn-proxy-mock:$GITHUB_SHA" -f ./helm/fdk-nginx-altinn-proxy-mock/values/demo-digdir.yaml ./helm/fdk-nginx-altinn-proxy-mock/ > ./kubectlapply.yaml
+            helm template --set DOCKER_IMAGE_NAME="eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock:$GITHUB_SHA" -f ./helm/fdk-nginx-altinn-proxy-mock/values/demo-digdir.yaml ./helm/fdk-nginx-altinn-proxy-mock/ > ./kubectlapply.yaml
             chmod o+w ./kubectlapply.yaml
             cat kubectlapply.yaml
 
