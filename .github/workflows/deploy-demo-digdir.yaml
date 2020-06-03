@@ -62,3 +62,10 @@ jobs:
         uses: pullreminders/slack-action@master
         with:
           args: '{\"channel\":\"C7NTH118T\",\"text\":\"Application: fdk-nginx-altinn-proxy-mock deployed to digdir-demo\"}'
+
+      - name: Trigger deploy to staging
+        uses: peter-evans/repository-dispatch@master
+        with:
+          token: ${{ secrets.DISPATCH_TOKEN }}
+          event-type: deploy-staging
+          client-payload: '{"sha": "${{ github.sha }}"}'
