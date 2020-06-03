@@ -1,0 +1,47 @@
+name: Deploy latest image to staging
+
+on:
+  repository_dispatch:
+    types: [deploy-staging]
+
+jobs:
+  deploy-staging:
+    name: Build to staging environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Apply Helm template
+        uses: stefanprodan/kube-tools@v1
+        with:
+          helm: 2.14.3
+          command: |
+            helm init --client-only
+            helm repo add fdk https://informasjonsforvaltning.github.io/helm-chart/
+            helm fetch --untar --untardir ./helm fdk/fdk-nginx-altinn-proxy-mock
+            helm template --set DOCKER_IMAGE_NAME="eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock:${{ github.event.client_payload.sha }}" -f ./helm/fdk-nginx-altinn-proxy-mock/values/staging.yaml ./helm/fdk-nginx-altinn-proxy-mock/ > ./kubectlapply.yaml
+            chmod o+w ./kubectlapply.yaml
+            cat kubectlapply.yaml
+
+      - name: Get kubeconfig file from GKE
+        uses: machine-learning-apps/gke-kubeconfig@master
+        with:
+          application_credentials: ${{ secrets.DIGDIR_FDK_DEV_AUTODEPLOY }}
+          project_id: digdir-fdk-dev
+          location_zone: europe-north1-a
+          cluster_name: digdir-fdk-dev
+
+      - name: Deploy to staging
+        uses: docker://bitnami/kubectl:latest
+        env:
+          KUBECONFIG: '/github/workspace/.kube/config'
+        with:
+          args: "apply -f ./kubectlapply.yaml --force"
+
+      - name: Notify slack of deploy
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        uses: pullreminders/slack-action@master
+        with:
+          args: '{\"channel\":\"C7NTH118T\",\"text\":\"Application: fdk-nginx-altinn-proxy-mock deployed to staging\"}'
