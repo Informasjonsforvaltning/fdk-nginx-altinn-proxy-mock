@@ -20,13 +20,13 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_DIGDIR_FDK_GCR_KEY }}
 
       - name: Configure docker to use the gcloud command-line tool as a credential helper
-        run: gcloud auth configure-docker
+        run: gcloud auth configure-docker eu.gcr.io
 
       - name: Build Docker image
         run: docker build . -t eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock:$GITHUB_SHA -t eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock:latest
 
       - name: Publish docker image to Google Cloud
-        run: docker -- push eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock
+        run: docker -- push eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock -a
 
       - name: Apply Helm template
         run: |
