@@ -1,0 +1,14 @@
+[
+  {
+    "Name": "Ruth Sjebane",
+    "Type": "Person",
+    "SocialSecurityNumber": "01018800061"
+  },
+  {
+    "Name": "Lekeplasstilsynet",
+    "Type": "Enterprise",
+    "OrganizationNumber": "555111054",
+    "OrganizationForm": "ORGL",
+    "Status": "Active"
+  }
+]
