@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build-test-and-deploy-demo:
@@ -66,7 +67,7 @@ jobs:
 
 #        Comment this part in if needed in staging environment
 #      - name: Trigger deploy to staging
-#        uses: peter-evans/repository-dispatch@master
+#        uses: peter-evans/repository-dispatch@main
 #        with:
 #          token: ${{ secrets.DISPATCH_TOKEN }}
 #          event-type: deploy-staging
