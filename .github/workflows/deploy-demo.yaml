@@ -18,7 +18,7 @@ jobs:
     - name: Setup gcloud CLI
       uses: google-github-actions/auth@v0
       with:
-        json_credentials: ${{ secrets.GCP_SA_DIGDIR_FDK_GCR_KEY }}
+        credentials_json: ${{ secrets.GCP_SA_DIGDIR_FDK_GCR_KEY }}
 
     - name: Configure docker to use the gcloud command-line tool as a credential helper
       run: gcloud auth configure-docker eu.gcr.io
@@ -73,8 +73,7 @@ jobs:
     - name: Setup gcloud CLI for deploy
       uses: google-github-actions/auth@v0
       with:
-        service_account_key: ${{ secrets.DIGDIR_FDK_DEV_AUTODEPLOY }}
-        export_default_credentials: true
+        credentials_json: ${{ secrets.DIGDIR_FDK_DEV_AUTODEPLOY }}
 
     - name: Deploy to GCP & check status
       run: |
