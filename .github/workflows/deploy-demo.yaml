@@ -7,101 +7,35 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-test-and-deploy-demo:
-    name: Build, publish and deploy to demo environment on merge to main branch
-    runs-on: ubuntu-latest
+  build-and-deploy-demo:
+    name: Call reusable workflow on push to main branch
+    uses: Informasjonsforvaltning/workflows/.github/workflows/build-deploy.yaml@main
+    with:
+      app_name: fdk-nginx-altinn-proxy-mock
+      caller_sha: ${{ github.sha }}
+      repo: ${{ github.repository }}
+      actor: ${{ github.actor }}
+      environment: demo
+      cluster: digdir-fdk-dev
+    secrets:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GCP_SA_DIGDIR_FDK_GCR_KEY: ${{ secrets.GCP_SA_DIGDIR_FDK_GCR_KEY }}
+      DIGDIR_FDK_AUTODEPLOY: ${{ secrets.DIGDIR_FDK_DEV_AUTODEPLOY }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Setup gcloud CLI
-      uses: google-github-actions/auth@v0
-      with:
-        credentials_json: ${{ secrets.GCP_SA_DIGDIR_FDK_GCR_KEY }}
-
-    - name: Configure docker to use the gcloud command-line tool as a credential helper
-      run: gcloud auth configure-docker eu.gcr.io
-
-    - name: Cache Docker layers
-      uses: actions/cache@v2
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
-
-    - name: Set up Docker Buildx
-      id: buildx
-      uses: docker/setup-buildx-action@v1
-
-    - name: Docker meta
-      id: meta
-      uses: docker/metadata-action@v3
-      with:
-        images: eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock
-        flavor: |
-          latest=true
-        tags: |
-          type=raw,value=${{ github.sha }},priority=1000
-          type=ref,event=branch
-
-    - name: Build and push
-      id: docker_build
-      uses: docker/build-push-action@v2
-      with:
-        context: ./
-        file: ./Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache
-        build-args:  |
-          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-
-    - name: Apply Helm template
-      run: |
-        helm repo add fdk https://informasjonsforvaltning.github.io/helm-chart/
-        helm fetch --untar --untardir ./helm fdk/fdk-nginx-altinn-proxy-mock
-        helm template --set DOCKER_IMAGE_NAME="eu.gcr.io/digdir-fdk-infra/fdk-nginx-altinn-proxy-mock:$GITHUB_SHA" \
-        -f ./helm/fdk-nginx-altinn-proxy-mock/values/demo.yaml \
-        ./helm/fdk-nginx-altinn-proxy-mock/ > ./kubectlapply.yaml
-        chmod o+w ./kubectlapply.yaml
-        cat kubectlapply.yaml
-
-    - name: Setup gcloud CLI for deploy
-      uses: google-github-actions/auth@v0
-      with:
-        credentials_json: ${{ secrets.DIGDIR_FDK_DEV_AUTODEPLOY }}
-
-    - name: Deploy to GCP & check status
-      run: |
-        gcloud container clusters get-credentials digdir-fdk-dev --region europe-north1-a --project digdir-fdk-dev
-        kubectl apply -f ./kubectlapply.yaml --force
-        if ! kubectl --namespace=demo rollout status deployment fdk-nginx-altinn-proxy-mock; then
-          kubectl --namespace=demo rollout undo deployment fdk-nginx-altinn-proxy-mock
-          kubectl --namespace=demo rollout status deployment fdk-nginx-altinn-proxy-mock
-          exit 1
-        fi
-
-    - name: Notify slack
-      uses: 8398a7/action-slack@v3
-      with:
-        mention: 'channel'
-        if_mention: failure
-        status: ${{ job.status }}
-        author_name: 'Application: fdk-nginx-altinn-proxy-mock | Environment: demo'
-        fields: commit,author,workflow
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: always()
-
-#      Comment this part in if needed in staging environment
-#    - name: Trigger deploy to staging
-#      uses: peter-evans/repository-dispatch@main
-#      with:
-#        token: ${{ secrets.DISPATCH_TOKEN }}
-#        event-type: deploy-staging
-#        client-payload: '{"sha": "${{ github.sha }}"}'
+# Currently not needed, uncomment if deploy to staging is necessary
+#  deploy-to-staging:
+#    needs: build-and-deploy-demo
+#    name: Deploy to staging if demo-deploy is successful
+#    uses: Informasjonsforvaltning/workflows/.github/workflows/deploy.yaml@main
+#    with:
+#      app_name: dataset-catalog-gui
+#      caller_sha: ${{ github.sha }}
+#      repo: ${{ github.repository }}
+#      actor: ${{ github.actor }}
+#      environment: staging
+#      cluster: digdir-fdk-dev
+#    secrets:
+#      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      DIGDIR_FDK_AUTODEPLOY: ${{ secrets.DIGDIR_FDK_DEV_AUTODEPLOY }}
+#      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
