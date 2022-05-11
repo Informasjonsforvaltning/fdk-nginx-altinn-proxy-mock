@@ -1,5 +1,5 @@
 {
   "Subject": {},
-  "Reportee": {"organizationNumber": "911527170"},
-  "Rights": [{"serviceCode": "5755"}]
+  "Reportee": {"OrganizationNumber": "911527170"},
+  "Rights": [{"ServiceCode": "5755"}]
 }
