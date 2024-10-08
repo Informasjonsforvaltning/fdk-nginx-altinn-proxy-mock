@@ -1,0 +1,14 @@
+[
+  {
+    "Name": "Toto B. Grehp",
+    "Type": "Person",
+    "SocialSecurityNumber": "01018800117"
+  },
+  {
+    "Name": "Norsk forening for begrepworkshops i offentlig sektor",
+    "Type": "Enterprise",
+    "OrganizationNumber": "555111097",
+    "OrganizationForm": "ORGL",
+    "Status": "Active"
+  }
+]
