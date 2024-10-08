@@ -3,7 +3,7 @@ name: Deploy to demo
 on:
   push:
     branches:
-      - main
+      - fix/hos/auth-fix
   workflow_dispatch:
 
 jobs:
