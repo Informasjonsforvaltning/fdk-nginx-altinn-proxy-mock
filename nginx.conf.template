@@ -11,11 +11,19 @@ http {
         server_name default_server;
 
         location /api/serviceowner/reportees {
+            if ($http_x_api_key != ${API_KEY}) {
+                return 403;
+            }
+
             default_type application/json;
             alias /mockdata/$arg_subject.json;
         }
 
         location /api/serviceowner/authorization/rights {
+            if ($http_x_api_key != ${API_KEY}) {
+                return 403;
+            }
+
             default_type application/json;
             alias /mockdata/authorization-mock/;
             try_files ${arg_reportee}_${arg_subject}.json ${arg_reportee}.json =404;
