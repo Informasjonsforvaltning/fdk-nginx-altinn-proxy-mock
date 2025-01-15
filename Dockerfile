@@ -5,6 +5,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY nginx.conf.template /etc/nginx/nginx.conf.template
 
+COPY mockdata /mockdata
+
 EXPOSE 8080
 
 COPY entrypoint.sh /
