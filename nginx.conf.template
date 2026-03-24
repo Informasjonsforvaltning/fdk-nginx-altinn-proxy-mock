@@ -34,11 +34,17 @@ http {
 
         # v2: "good enough" static mocks for Maskinporten + Altinn Access Management
         location = /api/maskinporten/token {
+            if ($http_x_api_key != ${API_KEY}) {
+                return 403;
+            }
             default_type application/json;
             alias /mockdataV2/token.json;
         }
 
         location = /accessmanagement/api/v1/resourceowner/authorizedparties {
+            if ($http_x_api_key != ${API_KEY}) {
+                return 403;
+            }
             if ($request_method != POST) {
                 return 405;
             }
