@@ -39,11 +39,12 @@ class Handler(BaseHTTPRequestHandler):
             payload = {}
 
         ssn = str(payload.get("value") or "").strip()
-        if ssn:
-            per_ssn = BY_SSN / f"{ssn}.json"
-            if per_ssn.exists():
-                self._write_json(load_json(per_ssn), code=200)
-                return
+        if ssn and ssn.isdigit():
+            target_name = f"{ssn}.json"
+            for candidate in BY_SSN.iterdir():
+                if candidate.name == target_name:
+                    self._write_json(load_json(candidate), code=200)
+                    return
 
         self._write_json(load_json(SUPERSET_FILE), code=200)
 
