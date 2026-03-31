@@ -39,9 +39,9 @@ class Handler(BaseHTTPRequestHandler):
             payload = {}
 
         ssn = str(payload.get("value") or "").strip()
-        if ssn:
-            per_ssn = BY_SSN / f"{ssn}.json"
-            if per_ssn.exists():
+        if ssn and ssn.isdigit():
+            per_ssn = (BY_SSN / f"{ssn}.json").resolve()
+            if str(per_ssn).startswith(str(BY_SSN.resolve())) and per_ssn.exists():
                 self._write_json(load_json(per_ssn), code=200)
                 return
 
