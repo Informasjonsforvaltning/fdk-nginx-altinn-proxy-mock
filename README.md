@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> This repository is archived. fdk-nginx-altinn-proxy-mock is deployed by Flux from
+> [Informasjonsforvaltning/fdk-infra](https://github.com/Informasjonsforvaltning/fdk-infra/tree/main/apps/base/fdk-nginx-altinn-proxy-mock);
+> make changes there.
+
 The goal of the proxy mock is provide local aternative for simulating Altinn service. 
 
 Demo localhost:
